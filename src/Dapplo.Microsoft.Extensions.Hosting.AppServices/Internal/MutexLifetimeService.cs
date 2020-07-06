@@ -1,6 +1,7 @@
-﻿// Copyright (c) Dapplo and contributors. All rights reserved.
+// Copyright (c) Dapplo and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
@@ -17,17 +18,19 @@ namespace Dapplo.Microsoft.Extensions.Hosting.AppServices.Internal
         private readonly IHostEnvironment hostEnvironment;
         private readonly IHostApplicationLifetime hostApplicationLifetime;
         private readonly IMutexBuilder mutexBuilder;
+        private readonly IServiceProvider provider;
         private ResourceMutex resourceMutex;
 
-        public MutexLifetimeService(ILogger<MutexLifetimeService> logger, IHostEnvironment hostEnvironment, IHostApplicationLifetime hostApplicationLifetime, IMutexBuilder mutexBuilder)
+        public MutexLifetimeService(ILogger<MutexLifetimeService> logger, IHostEnvironment hostEnvironment, IHostApplicationLifetime hostApplicationLifetime, IMutexBuilder mutexBuilder, IServiceProvider provider)
         {
             this.logger = logger;
             this.hostEnvironment = hostEnvironment;
             this.hostApplicationLifetime = hostApplicationLifetime;
             this.mutexBuilder = mutexBuilder;
+            this.provider = provider;
         }
 
-        public Task StartAsync(CancellationToken cancellationToken)
+        public async Task StartAsync(CancellationToken cancellationToken)
         {
             this.resourceMutex = ResourceMutex.Create(null, this.mutexBuilder.MutexId, this.hostEnvironment.ApplicationName, this.mutexBuilder.IsGlobal);
 
@@ -35,11 +38,17 @@ namespace Dapplo.Microsoft.Extensions.Hosting.AppServices.Internal
             if (!this.resourceMutex.IsLocked)
             {
                 this.mutexBuilder.WhenNotFirstInstance?.Invoke(this.hostEnvironment, this.logger);
+
+                var mutexBuilder = this.mutexBuilder as MutexBuilder;
+                foreach(var handlerType in mutexBuilder.WhenNotFirstInstanceHandlers)
+                {
+                    var handler = this.provider.GetService(handlerType) as IWhenNotFirstInstanceHandler;
+                    await handler.WhenNotFirstInstanceAsync();
+                }
+
                 this.logger.LogDebug("Application {0} already running, stopping application.", this.hostEnvironment.ApplicationName);
                 this.hostApplicationLifetime.StopApplication();
             }
-
-            return Task.CompletedTask;
         }
 
         private void OnStopping()

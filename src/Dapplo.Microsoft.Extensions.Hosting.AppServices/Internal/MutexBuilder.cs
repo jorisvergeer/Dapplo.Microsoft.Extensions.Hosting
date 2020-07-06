@@ -2,6 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
+
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
@@ -20,5 +22,12 @@ namespace Dapplo.Microsoft.Extensions.Hosting.AppServices.Internal
 
         /// <inheritdoc />
         public Action<IHostEnvironment, ILogger> WhenNotFirstInstance { get; set; }
+
+        internal IList<Type> WhenNotFirstInstanceHandlers { get; } = new List<Type>();
+
+        public void UseWhenNotFirstInstanceHandler<TWhenNotFirstInstanceHandler>() where TWhenNotFirstInstanceHandler : IWhenNotFirstInstanceHandler
+        {
+            this.WhenNotFirstInstanceHandlers.Add(typeof(TWhenNotFirstInstanceHandler));
+        }
     }
 }
