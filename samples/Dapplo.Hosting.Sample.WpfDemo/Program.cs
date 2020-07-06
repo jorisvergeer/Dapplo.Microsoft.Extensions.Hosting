@@ -1,4 +1,4 @@
-﻿// Copyright (c) Dapplo and contributors. All rights reserved.
+// Copyright (c) Dapplo and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Dapplo.Microsoft.Extensions.Hosting.Plugins;
@@ -11,6 +11,9 @@ using System.Threading.Tasks;
 using Dapplo.Microsoft.Extensions.Hosting.AppServices;
 using Dapplo.Microsoft.Extensions.Hosting.Wpf;
 using Microsoft.Extensions.DependencyInjection;
+using JKang.IpcServiceFramework.Hosting;
+using Microsoft.Extensions.Options;
+using JKang.IpcServiceFramework.Client;
 
 namespace Dapplo.Hosting.Sample.WpfDemo
 {
@@ -33,10 +36,15 @@ namespace Dapplo.Hosting.Sample.WpfDemo
                 .ConfigureSingleInstance(builder =>
                 {
                     builder.MutexId = "{C3CC6C8F-B40C-4EC2-A540-1D4B8FFFB60D}";
-                    builder.WhenNotFirstInstance = (hostingEnvironment, logger) =>
+                    builder.WhenNotFirstInstance = async (hostingEnvironment, logger, provider) =>
                     {
                         // This is called when an instance was already started, this is in the second instance
                         logger.LogWarning("Application {0} already running.", hostingEnvironment.ApplicationName);
+
+                        var clientFactory = provider.GetRequiredService<IIpcClientFactory<IInterProcessService>>();
+                        var client = clientFactory.CreateClient("client1");
+
+                        await client.InvokeAsync(x => x.ActivateOldInstance());
                     };
                 })
                 .ConfigurePlugins(pluginBuilder =>
@@ -56,6 +64,16 @@ namespace Dapplo.Hosting.Sample.WpfDemo
                 {
                     // Make OtherWindow available for DI to the MainWindow, but not as singleton
                     serviceCollection.AddTransient<OtherWindow>();
+
+                    serviceCollection.AddScoped<IInterProcessService, InterProcessService>();
+                    serviceCollection.AddNamedPipeIpcClient<IInterProcessService>("client1", pipeName: "{C3CC6C8F-B40C-4EC2-A540-1D4B8FFFB60D}");
+                })
+                .ConfigureIpcHost(builder =>
+                 {
+                     // configure IPC endpoints
+                     builder.AddNamedPipeEndpoint<IInterProcessService>(options => {
+                         options.PipeName = "{C3CC6C8F-B40C-4EC2-A540-1D4B8FFFB60D}";
+                     });
                 })
                 .ConfigureWpf(wpfBuilder => {
                     wpfBuilder.UseApplication<MyApplication>();

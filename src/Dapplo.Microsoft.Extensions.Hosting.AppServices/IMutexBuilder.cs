@@ -2,6 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Threading.Tasks;
+
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
@@ -25,6 +27,6 @@ namespace Dapplo.Microsoft.Extensions.Hosting.AppServices
         /// <summary>
         /// The action which is called when the mutex cannot be locked
         /// </summary>
-        Action<IHostEnvironment, ILogger> WhenNotFirstInstance { get; set; }
+        Func<IHostEnvironment, ILogger, IServiceProvider, Task> WhenNotFirstInstance { get; set; }
     }
 }

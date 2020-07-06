@@ -33,10 +33,12 @@ namespace Dapplo.Hosting.Sample.CaliburnMicroDemo
                 .ConfigureSingleInstance(builder =>
                 {
                     builder.MutexId = "{B9CE32C0-59AE-4AF0-BE39-5329AAFF4BE8}";
-                    builder.WhenNotFirstInstance = (hostingEnvironment, logger) =>
+                    builder.WhenNotFirstInstance = (hostingEnvironment, logger, provider) =>
                     {
                         // This is called when an instance was already started, this is in the second instance
                         logger.LogWarning("Application {0} already running.", hostingEnvironment.ApplicationName);
+
+                        return Task.CompletedTask;
                     };
                 })
                 .ConfigurePlugins(pluginBuilder =>

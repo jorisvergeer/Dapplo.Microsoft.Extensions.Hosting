@@ -1,4 +1,4 @@
-﻿// Copyright (c) Dapplo and contributors. All rights reserved.
+// Copyright (c) Dapplo and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -30,10 +30,12 @@ namespace Dapplo.Hosting.Sample.WinFormsDemo
                 .ConfigureSingleInstance(builder =>
                 {
                     builder.MutexId = "{80B16FA8-ECAE-4DD8-9F8A-FE7E6780A825}";
-                    builder.WhenNotFirstInstance = (hostingEnvironment, logger) =>
+                    builder.WhenNotFirstInstance = (hostingEnvironment, logger, provider) =>
                     {
                         // This is called when an instance was already started, this is in the second instance
                         logger.LogWarning("Application {0} already running.", hostingEnvironment.ApplicationName);
+
+                        return Task.CompletedTask;
                     };
                 })
                 .ConfigurePlugins(pluginBuilder =>

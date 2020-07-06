@@ -1,4 +1,4 @@
-﻿// Copyright (c) Dapplo and contributors. All rights reserved.
+// Copyright (c) Dapplo and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Dapplo.Microsoft.Extensions.Hosting.Plugins;
@@ -39,10 +39,12 @@ namespace Dapplo.Hosting.Sample.ReactiveDemo
                 .ConfigureSingleInstance(builder =>
                 {
                     builder.MutexId = "{EDF77D19-3272-43FF-81E1-AB36D08397EE}";
-                    builder.WhenNotFirstInstance = (hostingEnvironment, logger) =>
+                    builder.WhenNotFirstInstance = (hostingEnvironment, logger, provider) =>
                     {
                         // This is called when an instance was already started, this is in the second instance
                         logger.LogWarning("Application {0} already running.", hostingEnvironment.ApplicationName);
+
+                        return Task.CompletedTask;
                     };
                 })
                 .ConfigurePlugins(pluginBuilder =>

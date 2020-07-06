@@ -1,7 +1,9 @@
-﻿// Copyright (c) Dapplo and contributors. All rights reserved.
+// Copyright (c) Dapplo and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Threading.Tasks;
+
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
@@ -19,6 +21,6 @@ namespace Dapplo.Microsoft.Extensions.Hosting.AppServices.Internal
         public bool IsGlobal { get; set; }
 
         /// <inheritdoc />
-        public Action<IHostEnvironment, ILogger> WhenNotFirstInstance { get; set; }
+        public Func<IHostEnvironment, ILogger, IServiceProvider, Task> WhenNotFirstInstance { get; set; }
     }
 }
